@@ -1,0 +1,3 @@
+[submodule "ANNaNaS"]
+	path = ANNaNaS
+	url = https://github.com/SeseelLybon/ANNaNaS.git
