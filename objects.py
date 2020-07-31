@@ -85,9 +85,9 @@ class Peg(Drawable):
         self.isSelected = False
         self.selectedSprite:pyglet.sprite.Sprite = pyglet.sprite.Sprite(image_peg_selected, x=pos.x-peg_offset, y=pos.y-peg_offset)
 
-    def draw(self):
+    def draw(self, isAI=False):
         self.sprite.draw()
-        if self.isSelected:
+        if self.isSelected and isAI == False:
             self.selectedSprite.draw()
 
     def change_state(self, tostate:peg_state):
@@ -118,6 +118,7 @@ class Peg(Drawable):
                 self.sprite.update(x=self.pos.x-peg_offset, y=self.pos.y-peg_offset)
             else:
                 raise ValueError("ValueError|Peg.change_state; state", tostate, "doesn't exist!")
+        self.state = tostate
 
 
 
@@ -134,9 +135,10 @@ class Indicator(Drawable):
             self.sprite.image = indicator_image_dict[indicator_state.hit]
             # Change sprite colour
             if tostate == indicator_state.blow:
-                self.sprite.colour = indicator_colour_dict["blow"]
+                self.sprite.color = indicator_colour_dict[indicator_state.blow]
             elif tostate == indicator_state.hit:
-                self.sprite.colour = indicator_colour_dict["hit"]
+                self.sprite.color = indicator_colour_dict[indicator_state.hit]
+        self.state = tostate
 
 
 
@@ -150,36 +152,6 @@ class Selected(Drawable):
         super().__init__(pos, dim, image_peg_selected)
 
 
-
-def draw(window) -> None:
-    window.clear()
-
-    #Draw frame ANN
-    #Draw peg locations (4 colemns 10 rows)
-
-
-    #Draw frame player
-    frame.draw()
-    #Draw pegs
-    for i in range(10):
-        for j in range(4):
-            pegs_list[j, i].draw()
-    #Draw indicators
-    for i in range(10):
-        for j in range(4):
-            indicator_list[j, i].draw()
-    #Draw solution pegs
-    for i in range(4):
-        solution_pegs[i].draw()
-
-
-
-
-
-
-
-
-    return
 
 def peg_index_to_state(i:int)->peg_state:
     if i == 0:
@@ -199,69 +171,174 @@ def peg_index_to_state(i:int)->peg_state:
     else:
         raise ValueError("ValueError in peg_index_to_state; index was too high", i)
 
+def peg_state_to_index(i:peg_state)->int:
+    if i == peg_state.empty:
+        return 0
+    elif i == peg_state.red:
+        return 1
+    elif i == peg_state.green:
+        return 2
+    elif i == peg_state.blue:
+        return 3
+    elif i == peg_state.magenta:
+        return 4
+    elif i == peg_state.cyan:
+        return 5
+    elif i == peg_state.yellow:
+        return 6
+    else:
+        raise ValueError("ValueError in peg_index_to_state; index was too high", i)
+
+def indicator_index_to_state(i:int)->indicator_state:
+    if i == 0:
+        return indicator_state.empty
+    elif i == 1:
+        return indicator_state.blow
+    elif i == 2:
+        return indicator_state.hit
 
 
-if __name__ == '__main__':
-
-    window = pyglet.window.Window(1200, 800)
-    pyglet.gl.glClearColor(0.7, 0.7, 0.7, 1)
 
 
-    @window.event
-    def on_draw():
-        window.clear()
+class Board:
+    def __init__(self, pos:Vec2d, solution, isAI=False):
 
-        frame.draw()
+        self.frame = Frame(Vec2d(pos.x-40, pos.y-30))
+        self.isAI = isAI
+        self.solution = solution
+
+
+        self.pegs_list = np.ndarray([4, 10], dtype=Peg)
 
         for i in range(10):
             for j in range(4):
-                pegs_list[j, i].draw()
+                self.pegs_list[j, i] = Peg(Vec2d(pos.x + 50 * i, pos.y + 30 * j))
+
+        self.pegs_list[0, 0].isSelected = True
+
+        self.indicator_list = np.ndarray([4, 10], dtype=Indicator)
 
         for i in range(10):
-            for j in range(4):
-                indicator_list[j, i].draw()
+            for j in range(0, 4, 2):
+                self.indicator_list[j, i] = Indicator(Vec2d(pos.x + 50 * i - 9, pos.y + 30 * 4 + 9 * j))
+                if (4 % 2) == 0:
+                    self.indicator_list[j + 1, i] = Indicator(Vec2d(pos.x + 50 * i + 9, pos.y + 30 * 4 + 9 * j))
 
-        for i in range(4):
-            solution_pegs[i].draw()
-        return
+        # If the board belongs to the ANN, don't add the following fluff.
+        if not self.isAI:
+            self.colours_list = np.ndarray([6], dtype=Peg)
 
-    # 150, 200, * 10
+            for key, i in zip(peg_colour_dict.keys(), range(6)):
+                self.colours_list[i] = Peg(Vec2d(pos.x + 200 + 30 * i, pos.y - 60))
+                self.colours_list[i].change_state(key)
 
-    # Frame 1 loc start = 200, 150
+            self.colours_list[0].isSelected = True
 
-    # Creating objects structure
+            self.solution_pegs = np.array([Peg(Vec2d(pos.x + 50 * 11, pos.y + 30 * j)) for j in range(4)],
+                                     dtype=Peg)
 
-    frame = Frame(Vec2d(200, 150))
-
-    pegs_list = np.ndarray([4,10], dtype=Peg)
-
-    for i in range(10):
-        for j in range(4):
-            pegs_list[j,i] =  Peg( Vec2d( 240+50*i, 180+30*j ) )
-
-    indicator_list = np.ndarray([4, 10], dtype=Indicator)
-
-    for i in range(10):
-        for j in range(0, 4, 2):
-            indicator_list[j,i] =  Indicator( Vec2d( 240+50*i-9, 180+30*4+9*j ) )
-            if (4 % 2) == 0:
-                indicator_list[j+1,i] =  Indicator( Vec2d( 240+50*i+9, 180+30*4+9*j ) )
-
-    solution_pegs = np.array( [ Peg( Vec2d( 240+50*11, 180+30*j ) ) for j in range(4) ] , dtype=Peg)
+            # Put correct colours in for the solution_pegs
+            for i in range(4):
+                self.solution_pegs[i].change_state(peg_index_to_state(self.solution[i]))
+                print(peg_index_to_state(self.solution[i]))
 
 
-    # randomizing all pegs as a test
 
-    solution_nums = np.random.randint(1, 7, 4)
+    def draw(self):
+        self.frame.draw()
 
-    for i in range(4):
-        solution_pegs[i].change_state(peg_index_to_state(solution_nums[i]))
-        print(peg_index_to_state(solution_nums[i]))
+        for i in range(10):
+           for j in range(4):
+               self.pegs_list[j, i].draw(isAI=self.isAI)
 
 
-    pyglet.app.run()
+        if not self.isAI:
+            for i in range(10):
+                for j in range(4):
+                    self.indicator_list[j, i].draw()
 
-    print("Stopping drawbles.py|Main")
+            for i in range(4):
+                self.solution_pegs[i].draw()
+
+            for i in range(6):
+                self.colours_list[i].draw()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if __name__ == '__main__':
+#
+#    window = pyglet.window.Window(1200, 800)
+#    pyglet.gl.glClearColor(0.7, 0.7, 0.7, 1)
+#
+#
+#    @window.event
+#    def on_draw():
+#        window.clear()
+#
+#        frame.draw()
+#
+#        for i in range(10):
+#            for j in range(4):
+#                pegs_list[j, i].draw()
+#
+#        for i in range(10):
+#            for j in range(4):
+#                indicator_list[j, i].draw()
+#
+#        for i in range(4):
+#            solution_pegs[i].draw()
+#        return
+#
+#    # 150, 200, * 10
+#
+#    # Frame 1 loc start = 200, 150
+#
+#    # Creating objects structure
+#
+#    frame = Frame(Vec2d(200, 150))
+#
+#    pegs_list = np.ndarray([4,10], dtype=Peg)
+#
+#    for i in range(10):
+#        for j in range(4):
+#            pegs_list[j,i] =  Peg( Vec2d( 240+50*i, 180+30*j ) )
+#
+#    indicator_list = np.ndarray([4, 10], dtype=Indicator)
+#
+#    for i in range(10):
+#        for j in range(0, 4, 2):
+#            indicator_list[j,i] =  Indicator( Vec2d( 240+50*i-9, 180+30*4+9*j ) )
+#            if (4 % 2) == 0:
+#                indicator_list[j+1,i] =  Indicator( Vec2d( 240+50*i+9, 180+30*4+9*j ) )
+#
+#    solution_pegs = np.array( [ Peg( Vec2d( 240+50*11, 180+30*j ) ) for j in range(4) ] , dtype=Peg)
+#
+#
+#    # randomizing all pegs as a test
+#
+#    solution_nums = np.random.randint(1, 7, 4)
+#
+#    for i in range(4):
+#        solution_pegs[i].change_state(peg_index_to_state(solution_nums[i]))
+#        print(peg_index_to_state(solution_nums[i]))
+#
+#
+#    pyglet.app.run()
+#
+#    print("Stopping drawbles.py|Main")
 
 
 
