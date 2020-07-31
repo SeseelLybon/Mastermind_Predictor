@@ -77,12 +77,13 @@ class Drawable:
 
 
 
+peg_offset = 7
 class Peg(Drawable):
     def __init__(self, pos:Vec2d):
         super().__init__(pos, image_peg_size, image_peg_empty)
         self.state = peg_state.empty
         self.isSelected = False
-        self.selectedSprite:pyglet.sprite.Sprite = pyglet.sprite.Sprite(image_peg_selected, x=pos.x, y=pos.y)
+        self.selectedSprite:pyglet.sprite.Sprite = pyglet.sprite.Sprite(image_peg_selected, x=pos.x-peg_offset, y=pos.y-peg_offset)
 
     def draw(self):
         self.sprite.draw()
@@ -99,22 +100,22 @@ class Peg(Drawable):
             # Change sprite colour
             if tostate == peg_state.red:
                 self.sprite.color = peg_colour_dict[tostate]
-                self.sprite.update(x=self.pos.x-12, y=self.pos.y-12)
+                self.sprite.update(x=self.pos.x-peg_offset, y=self.pos.y-peg_offset)
             elif tostate == peg_state.green:
                 self.sprite.color = peg_colour_dict[tostate]
-                self.sprite.update(x=self.pos.x-12, y=self.pos.y-12)
+                self.sprite.update(x=self.pos.x-peg_offset, y=self.pos.y-peg_offset)
             elif tostate == peg_state.blue:
                 self.sprite.color = peg_colour_dict[tostate]
-                self.sprite.update(x=self.pos.x-12, y=self.pos.y-12)
+                self.sprite.update(x=self.pos.x-peg_offset, y=self.pos.y-peg_offset)
             elif tostate == peg_state.magenta:
                 self.sprite.color = peg_colour_dict[tostate]
-                self.sprite.update(x=self.pos.x-12, y=self.pos.y-12)
+                self.sprite.update(x=self.pos.x-peg_offset, y=self.pos.y-peg_offset)
             elif tostate == peg_state.cyan:
                 self.sprite.color = peg_colour_dict[tostate]
-                self.sprite.update(x=self.pos.x-12, y=self.pos.y-12)
+                self.sprite.update(x=self.pos.x-peg_offset, y=self.pos.y-peg_offset)
             elif tostate == peg_state.yellow:
                 self.sprite.color = peg_colour_dict[tostate]
-                self.sprite.update(x=self.pos.x-12, y=self.pos.y-12)
+                self.sprite.update(x=self.pos.x-peg_offset, y=self.pos.y-peg_offset)
             else:
                 raise ValueError("ValueError|Peg.change_state; state", tostate, "doesn't exist!")
 
@@ -151,15 +152,25 @@ class Selected(Drawable):
 
 
 def draw(window) -> None:
+    window.clear()
+
     #Draw frame ANN
     #Draw peg locations (4 colemns 10 rows)
 
 
     #Draw frame player
-    #Draw peg locations (4 colemns 10 rows)
-    #Draw indicator locations (4 sets in a square, 10 in a row,
-    #Draw peg locations for the solution
-    #Draw the solution-hider if set to hidden
+    frame.draw()
+    #Draw pegs
+    for i in range(10):
+        for j in range(4):
+            pegs_list[j, i].draw()
+    #Draw indicators
+    for i in range(10):
+        for j in range(4):
+            indicator_list[j, i].draw()
+    #Draw solution pegs
+    for i in range(4):
+        solution_pegs[i].draw()
 
 
 
