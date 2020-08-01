@@ -43,11 +43,12 @@ outputsize:int = max_pegs * max_dif_pegs
 
 
 print("Getting meeps from pickle; crashes if there is no picklejar")
-client_population:ANNaNaS.population.Population = ANNaNaS.population.Population(300, input_size=inputsize, hidden_size=hiddensize, output_size=outputsize)
-client_population.unpickle_population_from_file()
+client_population:ANNaNaS.population.Population = ANNaNaS.population.Population(1, input_size=inputsize, hidden_size=hiddensize, output_size=outputsize)
+#client_population.unpickle_population_from_file()
+client_population.unpickle_bestmeep_from_file()
 print("done unpickling and setting up population")
 
-meep: ANNaNaS.meeple.Meeple = client_population.pop[60]
+meep: ANNaNaS.meeple.Meeple = client_population.pop[0]
 
 
 attempt = 0 # doubles as selected_index_attempt
